@@ -20,7 +20,7 @@ uploaded_file = st.file_uploader("Choose an image...", type=["jpg", "jpeg", "png
 
 if uploaded_file is not None:
     img = Image.open(uploaded_file).convert('RGB').resize((224, 224))
-    st.image(img, caption="Uploaded Image", use_container_width=True)  # ✅ updated
+    st.image(img, caption="Uploaded Image", use_container_width=True)
 
     # Preprocess
     img_array = np.expand_dims(np.array(img) / 255.0, axis=0).astype(np.float32)
@@ -30,25 +30,5 @@ if uploaded_file is not None:
     interpreter.invoke()
     output = interpreter.get_tensor(output_details[0]['index'])[0]
 
-    # Debug: see actual output
-    st.write("Raw output:", output.tolist())
-
-    # Decide based on output shape
-    if output.shape == ():  # single value
-        score = output
-    else:
-        score = output[0] if output.shape[0] == 1 else output
-
-    # If binary (single value)
-    if len(output.shape) == 0 or output.shape[0] == 1:
-        if score > 0.5:
-            st.error("⚠️ Defective Track Detected")
-        else:
-            st.success("✅ Track is Properly Aligned")
-    else:
-        # If 2-class softmax output
-        predicted_class = np.argmax(output)
-        if predicted_class == 1:
-            st.error("⚠️ Defective Track Detected")
-        else:
-            st.success("✅ Track is Properly Aligned")
+    # Show raw output for debugging
+    st.write("🔍 Raw model output:", output.tolist())
