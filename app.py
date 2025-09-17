@@ -28,7 +28,14 @@ if uploaded_file is not None:
     # Inference
     interpreter.set_tensor(input_details[0]['index'], img_array)
     interpreter.invoke()
-    output = interpreter.get_tensor(output_details[0]['index'])[0]
+    prediction = interpreter.get_tensor(output_details[0]['index'])[0][0]
 
-    # Show raw output for debugging
-    st.write("🔍 Raw model output:", output.tolist())
+    # Show raw score (optional)
+    st.write("🔍 Raw output:", float(prediction))
+
+    # Custom threshold
+    threshold = 0.462  # Adjusted empirically
+    if prediction < threshold:
+        st.error("⚠️ Defective Track Detected")
+    else:
+        st.success("✅ Track is Properly Aligned")
