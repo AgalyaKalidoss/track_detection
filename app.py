@@ -54,21 +54,21 @@ with tab1:
 # TAB 2 — GPS Tracking + Sensor Readings
 # ==========================================
 with tab2:
-    st.header("Train GPS Tracking & Sensor Monitoring")
+    st.header("Train GPS Tracking, Collision Alerts & Scheduling")
 
     # -------------------------
     # Simulated Train GPS data
     # -------------------------
-    train_names = [f"Train_{i}" for i in range(1, 8)]
+    train_names = [f"Train_{i}" for i in range(1, 11)]
     locations = [
-        "Chennai", "Madurai", "Coimbatore",
-        "Trichy", "Salem", "Tirunelveli", "Erode"
+        "Chennai", "Madurai", "Coimbatore", "Trichy", "Salem",
+        "Tirunelveli", "Erode", "Thanjavur", "Vellore", "Dindigul"
     ]
 
     data = []
     for t, loc in zip(train_names, locations):
-        km_marker = random.randint(0, 500)
-        speed = random.randint(40, 120)
+        km_marker = random.randint(0, 500)  # current position
+        speed = random.randint(40, 120)     # current speed
         data.append([t, loc, km_marker, speed])
 
     df = pd.DataFrame(data, columns=["Train", "Location", "KM_Marker", "Speed"])
@@ -83,10 +83,16 @@ with tab2:
     safe_distance = 30  # km
     for i in range(len(df)):
         for j in range(i+1, len(df)):
-            if abs(df.loc[i,"KM_Marker"] - df.loc[j,"KM_Marker"]) < safe_distance:
-                faster = df.loc[i] if df.loc[i,"Speed"] > df.loc[j,"Speed"] else df.loc[j]
-                slower = df.loc[j] if df.loc[i,"Speed"] > df.loc[j,"Speed"] else df.loc[i]
-                alerts.append(f"⚠️ {faster['Train']} must slow down near {slower['Train']}")
+            dist = abs(df.loc[i,"KM_Marker"] - df.loc[j,"KM_Marker"])
+            if dist < safe_distance:  # too close
+                if df.loc[i,"Speed"] > df.loc[j,"Speed"]:
+                    alerts.append(
+                        f"⚠️ {df.loc[i,'Train']} must SLOW DOWN to avoid collision with {df.loc[j,'Train']} (distance {dist} km)"
+                    )
+                elif df.loc[j,"Speed"] > df.loc[i,"Speed"]:
+                    alerts.append(
+                        f"⚠️ {df.loc[j,'Train']} must SLOW DOWN to avoid collision with {df.loc[i,'Train']} (distance {dist} km)"
+                    )
 
     st.subheader("📢 Collision Alerts")
     if alerts:
@@ -96,7 +102,17 @@ with tab2:
         st.success("✅ No collision risks detected")
 
     # -------------------------
-    # Simulated Sensor readings (demo)
+    # Scheduling Suggestions
+    # -------------------------
+    st.subheader("🕒 Scheduling Suggestions")
+    for idx, row in df.iterrows():
+        if row['Speed'] < 60:
+            st.warning(f"🕒 {row['Train']} is slow — schedule next train 15 min later.")
+        else:
+            st.info(f"✅ {row['Train']} is on time — schedule next train 5 min later.")
+
+    # -------------------------
+    # Simulated Sensor readings
     # -------------------------
     st.subheader("📡 Sensor Readings (Demo)")
     sensor_data = {
